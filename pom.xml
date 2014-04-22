@@ -53,4 +53,13 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	<scm>
+		<url>https://github.com/rdammkoehler/code-shoot-out.git</url>
+		<connection>git@github.com:rdammkoehler/code-shoot-out.git</connection>
+		<developerConnection>Rich Dammkoehler</developerConnection>
+	</scm>
+	<organization>
+		<name>NOrad Ltd.</name>
+		<url>http://www.noradltd.com</url>
+	</organization>
 </project>
