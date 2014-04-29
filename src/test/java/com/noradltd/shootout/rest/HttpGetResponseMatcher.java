@@ -5,8 +5,6 @@ import static org.hamcrest.Matchers.is;
 
 import java.io.IOException;
 
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
@@ -20,9 +18,11 @@ import org.hamcrest.TypeSafeMatcher;
 
 public class HttpGetResponseMatcher extends TypeSafeMatcher<HttpGet> {
 
+	private int httpStatusCode;
 	private String htmlString;
 
-	public HttpGetResponseMatcher(String htmlString) {
+	public HttpGetResponseMatcher(int httpStatusCode, String htmlString) {
+		this.httpStatusCode = httpStatusCode;
 		this.htmlString = htmlString;
 	}
 
@@ -34,17 +34,13 @@ public class HttpGetResponseMatcher extends TypeSafeMatcher<HttpGet> {
 	@Override
 	protected boolean matchesSafely(HttpGet get) {
 		try {
-			HttpClients.createDefault().execute(get, new ResponseHandler<String>() {
+			HttpClients.createDefault().execute(get, new ResponseHandler<Void>() {
 
-				public String handleResponse(final HttpResponse response) throws ClientProtocolException, IOException {
+				public Void handleResponse(final HttpResponse response) throws ClientProtocolException, IOException {
 					int status = response.getStatusLine().getStatusCode();
-					assertThat(status, is(HttpServletResponse.SC_OK));
-					if (status >= 200 && status < 300) {
-						assertThat(EntityUtils.toString(response.getEntity()), is(htmlString + "\n"));
-						return "";
-					} else {
-						throw new ClientProtocolException("Unexpected response status: " + status);
-					}
+					assertThat(status, is(httpStatusCode));
+					assertThat(EntityUtils.toString(response.getEntity()), is(htmlString + "\n"));
+					return null;
 				}
 
 			});
@@ -55,8 +51,8 @@ public class HttpGetResponseMatcher extends TypeSafeMatcher<HttpGet> {
 	}
 
 	@Factory
-	public static <T> Matcher<HttpGet> matches(String htmlString) {
-		return new HttpGetResponseMatcher(htmlString);
+	public static <T> Matcher<HttpGet> matches(int httpStatusCode, String htmlString) {
+		return new HttpGetResponseMatcher(httpStatusCode, htmlString);
 	}
 
 }

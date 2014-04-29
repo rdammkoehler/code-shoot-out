@@ -62,7 +62,7 @@ public class JettyManager {
 		startJetty(new HelloHandler());
 		String urlString = "http://localhost:" + SERVER_PORT + "/";
 		try {
-			assertThat(new HttpGet(urlString), matches(H1_HELLO_WORLD_H1));
+			assertThat(new HttpGet(urlString), matches(HttpServletResponse.SC_OK, H1_HELLO_WORLD_H1));
 		} finally {
 			stopJetty();
 		}
