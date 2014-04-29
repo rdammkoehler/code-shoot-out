@@ -7,6 +7,7 @@ import static org.hamcrest.Matchers.is;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -44,6 +45,14 @@ public class DerbyManager {
 		return (e.getErrorCode() == 50000) && ("XJ015".equals(e.getSQLState()));
 	}
 
+	private static final String TABLE_NAME = "contact";
+	private static final String CREATE_TABLE__SQL = "create table " + TABLE_NAME
+			+ "(first_name varchar(40), last_name varchar(40))";
+	private static final String INSERT_INTO_CONTACT_FIRST_NAME_LAST_NAME_VALUES_SQL = "INSERT INTO " + TABLE_NAME
+			+ " (first_name, last_name) VALUES (?, ?)";
+	private static final String SELECT_FROM_CONTACT_SQL = "select * from " + TABLE_NAME;
+	private static final String DROP_TABLE_CONTACT_SQL = "drop table " + TABLE_NAME;
+
 	@Test
 	public void startStopTest() throws SQLException {
 		final String firstName = "Rich";
@@ -52,16 +61,37 @@ public class DerbyManager {
 		Connection connection = getConnection("derbyDB");
 		Statement statement = connection.createStatement();
 		try {
-			statement.execute("create table contact(first_name varchar(40), last_name varchar(40))");
-			statement.execute("INSERT INTO contact (first_name, last_name) VALUES ('" + firstName + "', '" + lastName
-					+ "')");
-			ResultSet resultSet = statement.executeQuery("select * from contact");
+			createTable(statement);
+			insertTestData(firstName, lastName, connection);
+			ResultSet resultSet = getData(statement);
 			assertThat(resultSet, contains(firstName, lastName));
 			assertThat(resultSet, is(empty()));
 		} finally {
-			statement.execute("drop table contact");
+			dropTable(statement);
+			statement.close();
+			connection.close();
 			stopDerby();
 		}
+	}
+
+	private void dropTable(Statement statement) throws SQLException {
+		statement.execute(DROP_TABLE_CONTACT_SQL);
+	}
+
+	private ResultSet getData(Statement statement) throws SQLException {
+		return statement.executeQuery(SELECT_FROM_CONTACT_SQL);
+	}
+
+	private void insertTestData(final String firstName, final String lastName, Connection connection)
+			throws SQLException {
+		PreparedStatement pStatement = connection.prepareStatement(INSERT_INTO_CONTACT_FIRST_NAME_LAST_NAME_VALUES_SQL);
+		pStatement.setString(1, firstName);
+		pStatement.setString(2, lastName);
+		pStatement.execute();
+	}
+
+	private void createTable(Statement statement) throws SQLException {
+		statement.execute(CREATE_TABLE__SQL);
 	}
 
 }
